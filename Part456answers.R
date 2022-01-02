@@ -7,25 +7,32 @@ library(tidyverse)
 ## and replicate game function 10000 times with each probability
 ## then calculate the mean of turns and compare the results
 
-dist_of_num_turns_one <- replicate(10000, count_num_turns(lgrid, c(4,4), green_prob=0.05, to_print = F))
-mean(dist_of_num_turns_one)
+mean_dist_of_num_turns <- function(replicate_time = 10000, square_position, green_prob) {
+  dist_of_num_turns <- replicate(replicate_time, count_num_turns(lgrid, square_position, green_prob, to_print = F))
+  return(mean(dist_of_num_turns))
+}
 
-dist_of_num_turns_two <- replicate(10000, count_num_turns(lgrid, c(4,4), green_prob=0.20, to_print = F))
-mean(dist_of_num_turns_two)
+mean_one <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.05)
+mean_two <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.20)
+mean_three<- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.40)
+mean_four <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.60)
+mean_five <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.80)
+mean_six <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.95)
 
-dist_of_num_turns_three <- replicate(10000, count_num_turns(lgrid, c(4,4), green_prob=0.40, to_print = F))
-mean(dist_of_num_turns_three)
+df_part4 <- data.frame(prob = c(0.05, 0.20, 0.40, 0.60, 0.80, 0.95),
+                       mean_value = c(mean_one, mean_two, mean_three, mean_four, mean_five, mean_six))
 
-dist_of_num_turns_four <- replicate(10000, count_num_turns(lgrid, c(4,4), green_prob=0.60, to_print = F))
-mean(dist_of_num_turns_four)
-
-dist_of_num_turns_five <- replicate(10000, count_num_turns(lgrid, c(4,4), green_prob=0.80, to_print = F))
-mean(dist_of_num_turns_five)
-
-dist_of_num_turns_six <- replicate(10000, count_num_turns(lgrid, c(4,4), green_prob=0.95, to_print = F))
-mean(dist_of_num_turns_six)
+ggplot(data = df_part4, aes(x = prob, y = mean_value)) +
+  geom_point(size = 3, colour = "red") +
+  geom_line(size = 1, colour = "blue") +
+  labs(x = " probability p", y = "Mean moves ",
+       title = "Mean moves to form a five-letter palindrome with different probability",
+       subtitle = "The mean moves tends to decrease with p increasing")
 ## Part5
-dist_of_num_turns_seven <- replicate(10000, count_num_turns(lgrid, c(6,6), green_prob=0.05, to_print = F))
-mean(dist_of_num_turns_seven)
+dist_of_num_turns_d4 <- replicate(10000, count_num_turns(lgrid, c(4,4), green_prob=0.95, to_print = F))
+dist_of_num_turns_f6 <- replicate(10000, count_num_turns(lgrid, c(6,6), green_prob=0.05, to_print = F))
+
+hist(dist_of_num_turns_d4, main ="Histogram of the number of moves to complete the game", xlab = "Number of Moves" )
+hist(dist_of_num_turns_f6, main ="Histogram of the number of moves to complete the game", xlab = "Number of Moves" )
 
 ## Part6
