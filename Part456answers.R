@@ -1,4 +1,6 @@
 ##install.packages("tidyverse")
+##install.packages("devtools")
+##install.packages("gridExtra")
 library(tidyverse)
 
 ## Part4
@@ -34,5 +36,28 @@ dist_of_num_turns_f6 <- replicate(10000, count_num_turns(lgrid, c(6,6), green_pr
 
 hist(dist_of_num_turns_d4, main ="Histogram of the number of moves to complete the game", xlab = "Number of Moves" )
 hist(dist_of_num_turns_f6, main ="Histogram of the number of moves to complete the game", xlab = "Number of Moves" )
+
+df_d4 <- as.data.frame(dist_of_num_turns_d4)
+df_f6 <- as.data.frame(dist_of_num_turns_f6)
+
+ggplot(df_d4, aes(x = dist_of_num_turns_d4)) + 
+  geom_bar()
+
+ggplot(df_f6, aes(x = dist_of_num_turns_f6)) + 
+  geom_bar()
+
+df_d4_count <- df_d4 %>% count(dist_of_num_turns_d4)
+p_d4 <- ggplot(data = df_d4_count, aes(x = dist_of_num_turns_d4, y = n)) + 
+  geom_point() +
+  geom_smooth()
+  
+p_f6 <- ggplot(data = df_f6_count, aes(x = dist_of_num_turns_f6, y = n)) + 
+  geom_point() +
+  geom_smooth()
+
+gridExtra::grid.arrange(p_d4, p_f6)
+
+quantile(dist_of_num_turns_d4, seq(0.1, 1, 0.05))
+quantile(dist_of_num_turns_f6, seq(0.1, 1, 0.05))
 
 ## Part6
