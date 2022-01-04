@@ -61,3 +61,16 @@ quantile(dist_of_num_turns_d4, seq(0.1, 1, 0.05))
 quantile(dist_of_num_turns_f6, seq(0.1, 1, 0.05))
 
 ## Part6
+A <- c(25, 13, 16, 24, 11, 12, 24, 26, 15, 19, 34)
+B <- c(35, 41, 23, 26, 18, 15, 33, 42, 18, 47, 21, 26)
+
+# Shapiro-Wilk Normality test
+shapiro.test(A)
+shapiro.test(B)
+
+# Homogeneity of variance test
+var.test(A, B)
+
+# student-t test
+t.test(A, B, var.equal = TRUE)
+
