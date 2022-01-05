@@ -34,6 +34,10 @@ ggplot(data = df_part4, aes(x = prob, y = mean_value)) +
 dist_of_num_turns_d4 <- replicate(10000, count_num_turns(lgrid, c(4,4), green_prob=0.95, to_print = F))
 dist_of_num_turns_f6 <- replicate(10000, count_num_turns(lgrid, c(6,6), green_prob=0.05, to_print = F))
 
+var.test(dist_of_num_turns_d4, dist_of_num_turns_f6)
+## p < 0.05 
+t.test(dist_of_num_turns_d4, dist_of_num_turns_f6)
+
 hist(dist_of_num_turns_d4, main ="Histogram of the number of moves to complete the game", xlab = "Number of Moves" )
 hist(dist_of_num_turns_f6, main ="Histogram of the number of moves to complete the game", xlab = "Number of Moves" )
 
