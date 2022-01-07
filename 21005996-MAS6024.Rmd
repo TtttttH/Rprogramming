@@ -1,0 +1,208 @@
+---
+title: "MAS6024 Assignment"
+author: "210115996"
+output: pdf_document
+---
+
+## Part 1 
+
+First, create a letter board matrix named lgrid. And then define two vector to store the green square's position and move direction for white square. The function called move_square takes the current square position as an argument and returns the square that the token moves to following the rules of the game. The function called is_edge_square is used to judge the current square whether it is on the edge of the board. The function called is_green_square is used to know the current square's color.
+```{r, echo = TRUE}
+lgrid <- matrix(NA, nrow = 8, ncol = 8)
+lgrid[1,] <- c("r", "l", "q", "s", "t", "z", "c", "a")
+lgrid[2,] <- c("i", "v", "d", "z", "h", "l", "t", "p")
+lgrid[3,] <- c("u", "r", "o", "y", "w", "c", "a", "c")
+lgrid[4,] <- c("x", "r", "f", "n", "d", "p", "g", "v")
+lgrid[5,] <- c("h", "j", "f", "f", "k", "h", "g", "m")
+lgrid[6,] <- c("k", "y", "e", "x", "x", "g", "k", "i")
+lgrid[7,] <- c("l", "q", "e", "q", "f", "u", "e", "b")
+lgrid[8,] <- c("l", "s", "d", "h", "i", "k", "y", "n")
+
+#create the vector of green square's position
+green_position <- c(14, 23, 42, 51)
+
+#create the move direction when choose un-edged white square
+white_direction <- c(-1, 1, -7, 7, -8, 8, -9, 9)
+
+is_edge_square <- function(current) {
+  is_edge <- (current <= 8 || current >= 57 || current %% 8 == 0 || current %% 8 == 1)
+  return(is_edge)
+}
+
+is_green_square <- function(current) {
+  is_green <- current %in% green_position
+  return(is_green)
+}
+move_square <- function(current) {
+  next_square = 0
+  if (is_edge_square(current)) {
+    next_square <- sample(1:64, size = 1)
+  } else {
+    next_square <- current + sample(white_direction, size = 1)
+  }
+  return(next_square)
+}
+```
+
+## Part 2
+
+a) My rules for deciding whether to add the letter to the player's collection if the token lands on a white square:
+1.When the length of collection is smaller than 3, add the next letter directly.
+2.When the length of collection equals to 3 and the next letter equals to one or more letters in the collection, add it.
+3.When the length of collection equals to 4, estimate the string formed by letters in the collection. Depending on the format of the string, call the function named is_palindrome to choose different rule about forming the palindrome to decide whether to add the letter to the collection.
+
+b) According my rules, when the length of the collection reach to 4, the collection will contain at least two same letters.
+And the final letter added to the collection will form a second pair of the same letters with another letter(unless there are already two pair of same letters in the collection before the final letter added). Perhaps we can estimate the probabilities of forming the palindrome with different prefix string, and remove some low-probability prefix cases. Which means we do not add the letter to the collection when the next letter will form the low-probability prefix string with current letters in the collection even it also can form palindrome finally.I think it can improve the strategy at the cost of increasing complexity.
+
+
+
+## Part 3
+```{r, echo = TRUE}
+## if current is a white square, 
+## choose whether to add the letter to the collection
+choose_whether_add <-function(current, collection) {
+  collect_length <- length(collection)
+  letter <- lgrid[current]
+  if (collect_length < 3) {
+    return(TRUE)
+  } else if (collect_length == 3){
+    return(letter %in% collection)
+  } else if (collect_length == 4){
+    return(is_palindrome(letter, collection))
+  }
+}
+
+is_palindrome <- function(letter, collection) {
+  collection <- sort(collection)
+  
+  ## like "abcc"
+  if (collection[1] != collection[2] && collection[2] != collection[3]) {
+    return((letter == collection[1] || letter == collection[2]))
+  }
+  
+  ## like "aabc"
+  if (collection[1] == collection[2] && collection[2] != collection[3] && collection[3] != collection[4]) {
+    return((letter == collection[3] || letter == collection[4]))
+  }
+  
+  ## like aabb aaaa
+  if (collection[1] == collection[2] && collection[3] == collection[4]) {
+    return(TRUE)
+  }
+  
+  ## like abbc abbb aaab
+  return(letter == collection[1] || letter == collection[4])
+}
+
+## if current is a green square
+## the random events happen
+green_events <- function(current, green_prob, collection) {
+  ## random event happen according to the probability 
+  mode <- sample(0:1, size = 1, prob=c(green_prob, 1-green_prob))
+  if(mode == 0) {
+    collection <- c("f", "f", "h", "k")
+  } else {
+    letter <- lgrid[current]
+    remove_index <- which(collection == letter)
+    if(length(remove_index) != 0) {
+      collection <- collection[-remove_index]
+    }
+  }
+  return(collection)
+}
+
+## The code for the game
+## start_position is a vector like(4, 4) means square D4
+count_num_turns <- function(lgrid_matrix,start_position,green_prob, to_print) {
+  num_turns <- 0
+  current <- start_position[1] + (start_position[2] - 1) * 8
+  collection <- vector()
+  while(length(collection) < 5) {
+    ## for green square
+    if(is_green_square(current)) {
+      if(to_print == T) cat ("current square = ", current, "it's a green square \n")
+      collection <- green_events(current, green_prob, collection)
+      current <- move_square(current)
+    } else {
+      ## for white square 
+      ## choose whether to add current square letter to the collection
+      if(to_print == T) cat ("current square = ", current, "it's an white square \n")
+      if(choose_whether_add(current, collection)) {
+        collection <- append(collection, lgrid[current])
+      }
+      
+      ## Is current square an edge square?
+      if(is_edge_square(current)) {
+        if(to_print == T) cat ("it's an edge square!\n")
+        current <- move_square(current)
+      } else {
+        current <- move_square(current)
+      }
+    }
+    num_turns <- num_turns + 1
+  }
+  if(to_print == T) {
+    cat ("the collection result:", collection, "\n")
+    cat ("the number of turns:", num_turns, "\n")
+  }
+  return(num_turns)
+}
+```
+## Part 4
+The position of the square D4 in the matrix is (4, 4), we change the parameter p from 0.05 to 0.95, and replicate the game function 10000 times with each probability. Then we calculate the mean of moves with different p values and compare the results by a line plot.
+
+According to the plot, we can easily find that the number of moves required to finish the game decreases as the value of p increases.
+
+```{r, echo = TRUE}
+library(tidyverse)
+mean_dist_of_num_turns <- function(replicate_time = 10000, square_position, green_prob) {
+  dist_of_num_turns <- 
+    replicate(replicate_time, count_num_turns(lgrid, square_position, green_prob, to_print = F))
+  return(mean(dist_of_num_turns))
+}
+
+mean_one <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.05)
+mean_two <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.20)
+mean_three<- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.40)
+mean_four <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.60)
+mean_five <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.80)
+mean_six <- mean_dist_of_num_turns(square_position = c(4,4), green_prob = 0.95)
+
+df_part4 <- data.frame(prob = c(0.05, 0.20, 0.40, 0.60, 0.80, 0.95),
+                       mean_value = c(mean_one, mean_two, mean_three, mean_four, mean_five, mean_six))
+
+ggplot(data = df_part4, aes(x = prob, y = mean_value)) +
+  geom_point(size = 3, colour = "red") +
+  geom_line(size = 1, colour = "blue") +
+  labs(x = "p", y = "Mean moves ",
+       title = "Mean moves to form a five-letter palindrome with different probability",
+       subtitle = "The mean moves tends to decrease with p increasing")
+```
+
+
+## Part 5
+We replicate the game 10000 times for starting points D4 with p = 0.95 and F6 with p = 0.05.And then we create the boxplot for the results to compare 
+
+
+
+
+
+## Part 6
+According to the question, we create to vectors to store the number of moves results first. Then we can use T-test to assess the evidence that $E(X_A)$=$E(X_B)$.
+
+```{r, echo = TRUE}
+A <- c(25, 13, 16, 24, 11, 12, 24, 26, 15, 19, 34)
+B <- c(35, 41, 23, 26, 18, 15, 33, 42, 18, 47, 21, 26)
+
+## Use Shapiro-Wilk Normality test to prove that A and B are normally distributed first
+shapiro.test(A)
+shapiro.test(B)
+
+## Use homogeneity of variance test to prove that A and B are homogenous
+var.test(A, B)
+## T test
+t.test(A, B, var.equal = TRUE)
+```
+
+According to the above t-test results we can find that the p-value of t-test is smaller than 0.05(p-value < 0.05), we can assume that the expectations of A and B are different.
+In conclusion, $E(X_A)$ $\neq$ $E(X_B)$.
